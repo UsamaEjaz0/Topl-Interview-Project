@@ -9,6 +9,12 @@ from requests import Response
 from api.models.article import Article
 from api.models.author import Author
 from api.sources.base import NewsSource
+import os
+from dotenv import load_dotenv
+
+
+load_dotenv()
+API_KEY = os.getenv('API_KEY')
 
 
 class GNewsSourceInfo(BaseModel):
@@ -42,7 +48,7 @@ class GNewSourceArticles(BaseModel):
 # noinspection PyShadowingBuiltins
 class GNewsSource(NewsSource):
     # Move to more secure location like .env
-    __token: str = "b2afdfba15da9f459a32cbee57cca1da"
+    __token: str = API_KEY
 
     def __get(self, endpoint: str, *, max: int = 10, **kwargs) -> Try[Response]:
         if max > 10:
