@@ -17,3 +17,6 @@ python main.py
 ## API Docs
 Navigate to `localhost:8080/docs` to view API documentation.
 
+## Notes
+In the free plan, you can only request for 10 articles at a time. Currently, I have provided my API key which allows 100 requests/day.
+
