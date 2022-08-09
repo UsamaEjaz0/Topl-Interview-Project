@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import requests
+from expression import Try, effect, pipe, Success, Failure
+from expression.collections import Seq, seq
 from pydantic import BaseModel
 from requests import Response
 
@@ -41,24 +43,51 @@ class GNewsSource(NewsSource):
     # Move to more secure location like .env
     __token: str = "fb59814ed56f1a263277c40b0a1ea6a8"
 
-    def __get(self, endpoint: str, **kwargs) -> Response:
-        return requests.get(f"https://gnews.io/api/v4/{endpoint}", params={"token": self.__token, **kwargs})
+    def __get(self, endpoint: str, **kwargs) -> Try[Response]:
+        try:
+            response = requests.get(f"https://gnews.io/api/v4/{endpoint}", params={"token": self.__token, **kwargs})
+            if response.status_code != 200:
+                return Failure(ValueError(f"{response.status_code}: {response.text}"))
+
+            return Success(response)
+        except Exception as e:
+            return Failure(e)
+
+    @staticmethod
+    def __parse(json: dict) -> Try[GNewSourceArticles]:
+        try:
+            return Success(GNewSourceArticles.parse_obj(json))
+        except Exception as e:
+            return Failure(e)
 
     @classmethod
-    def name(cls) -> str: return 'Google News'
+    def name(cls) -> str:
+        return 'Google News'
 
-    def fetch(self, count: int = 10, offset: int = 0) -> list[Article]:
-        articles = GNewSourceArticles.parse_obj(self.__get("top-headlines").json())
-        return [
-            article.map_to_article() for article in articles.articles
-        ]
+    @effect.try_[Seq[Article]]()
+    def fetch(self, count: int = 10, offset: int = 0) -> Try[Seq[Article]]:
+        res: Response = yield from self.__get("top-headlines")
+        articles: GNewSourceArticles = yield from self.__parse(res.json())
+        return pipe(
+            articles.articles,
+            seq.map(lambda x: x.map_to_article())
+        )
 
-    def search(self, item: Author | list[str]) -> list[Article]:
+    @effect.try_[Seq[Article]]()
+    def search(self, item: Author | Seq[str]) -> Try[Seq[Article]]:
         if isinstance(item, Author):
-            raise NotImplementedError("Search by author is not supported by this source")
+            return Failure(NotImplementedError("Search by author is not supported by this source"))
 
-        tokens = [f'"{token}"' for token in item]
-        articles = GNewSourceArticles.parse_obj(self.__get("search", q=" ".join(tokens)).json())
-        return [
-            article.map_to_article() for article in articles.articles
-        ]
+        tokens = pipe(
+            item,
+            seq.map(lambda i: f'"{i}"'),
+            seq.fold(lambda acc, i: f"{acc} {i}".strip(), "")
+        )
+        print(tokens)
+        res: Response = yield from self.__get("search", q=tokens)
+        articles: GNewSourceArticles = yield from self.__parse(res.json())
+        return pipe(
+            articles.articles,
+            seq.map(lambda x: x.map_to_article())
+        )
+

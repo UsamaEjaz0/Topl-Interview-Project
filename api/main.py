@@ -1,4 +1,8 @@
-from fastapi import FastAPI
+from typing import cast, Callable
+
+from expression import Failure, Ok, Try
+from expression.collections import seq, Seq
+from fastapi import FastAPI, HTTPException
 
 from api.cache.base import CachedNewsSource
 from api.models.article import Article
@@ -14,14 +18,25 @@ sources: dict[str, NewsSource] = {
 app = FastAPI()
 
 
+def execute_request(source: str, action: Callable[[], Try[Seq[Article]]]) -> list[Article]:
+    if source not in sources:
+        raise HTTPException(status_code=404, detail=f"Source {source} not found")
+
+    res = action()
+    if res.is_ok():
+        return list(cast(Ok, res).value)
+    else:
+        raise HTTPException(status_code=400, detail=cast(Failure, res).message)
+
+
 @app.get("/")
 def fetch(query: int = 10, source: str = "default") -> list[Article]:
-    return sources[source].fetch(query)
+    return execute_request(source, lambda: sources[source].fetch(query))
 
 
 @app.get("/search")
 def search(query: str, source: str = "default") -> list[Article]:
-    return sources[source].search(query.split(" "))
+    return execute_request(source, lambda: sources[source].search(seq.of_iterable(query.split(" "))))
 
 
 if __name__ == "__main__":

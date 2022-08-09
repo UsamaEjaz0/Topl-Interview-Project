@@ -1,7 +1,10 @@
 from abc import ABC, abstractmethod
 
-from api.models.author import Author
+from expression import Try
+from expression.collections import Seq
+
 from api.models.article import Article
+from api.models.author import Author
 
 
 class NewsSource(ABC):
@@ -10,7 +13,7 @@ class NewsSource(ABC):
     def name(cls) -> str: ...
 
     @abstractmethod
-    def fetch(self, count: int = 10, offset: int = 0) -> list[Article]: ...
+    def fetch(self, count: int = 10, offset: int = 0) -> Try[Seq[Article]]: ...
 
     @abstractmethod
-    def search(self, item: Author | list[str]) -> list[Article]: ...
+    def search(self, item: Author | Seq[str]) -> Try[Seq[Article]]: ...

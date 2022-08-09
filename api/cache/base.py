@@ -1,5 +1,8 @@
 from typing import TypeVar, Generic
 
+from expression import Try, effect
+from expression.collections import Seq
+
 from api.cache.strategy.base import CacheStrategy
 from api.cache.strategy.memory import MemoryStrategy
 from api.models.article import Article
@@ -22,19 +25,21 @@ class CachedNewsSource(NewsSource, Generic[_T]):
     def name(cls) -> str:
         return 'CachedNewsSource'
 
-    def fetch(self, count: int = 10, offset: int = 0) -> list[Article]:
+    @effect.try_[Seq[Article]]()
+    def fetch(self, count: int = 10, offset: int = 0) -> Try[Seq[Article]]:
         key = CacheStrategy.CachedFetch(count, offset)
         if key not in self.__strategy:
-            self.__strategy[key] = self.__internal.fetch(count, offset)
+            self.__strategy[key] = yield from self.__internal.fetch(count, offset)
 
         return self.__strategy[key]
 
-    def search(self, item: Author | list[str]) -> list[Article]:
+    @effect.try_[Seq[Article]]()
+    def search(self, item: Author | Seq[str]) -> Try[Seq[Article]]:
         key = CacheStrategy.CachedSearch(item) \
             if isinstance(item, Author) \
             else CacheStrategy.CachedSearch(tuple(item))
 
         if key not in self.__strategy:
-            self.__strategy[key] = self.__internal.search(item)
+            self.__strategy[key] = yield from self.__internal.search(item)
 
         return self.__strategy[key]
