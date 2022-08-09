@@ -39,13 +39,18 @@ class GNewSourceArticles(BaseModel):
     articles: list[GNewsArticle]
 
 
+# noinspection PyShadowingBuiltins
 class GNewsSource(NewsSource):
     # Move to more secure location like .env
     __token: str = "b2afdfba15da9f459a32cbee57cca1da"
 
-    def __get(self, endpoint: str, **kwargs) -> Try[Response]:
+    def __get(self, endpoint: str, *, max: int = 10, **kwargs) -> Try[Response]:
+        if max > 10:
+            return Failure(ValueError("Max value is 10"))
+
         try:
-            response = requests.get(f"https://gnews.io/api/v4/{endpoint}", params={"token": self.__token, **kwargs})
+            response = requests.get(f"https://gnews.io/api/v4/{endpoint}",
+                                    params={"token": self.__token, "max": max, **kwargs})
             if response.status_code != 200:
                 return Failure(ValueError(f"{response.status_code}: {response.text}"))
 

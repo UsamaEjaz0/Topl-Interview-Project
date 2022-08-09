@@ -36,8 +36,8 @@ def execute_request(source: str, action: Callable[[], Try[Seq[Article]]]) -> lis
 
 
 @app.get("/", description="Fetch N number of articles")
-def fetch(query: int = 10, source: str = "default") -> list[Article]:
-    return execute_request(source, lambda: sources[source].fetch(query))
+def fetch(count: int = 10, source: str = "default") -> list[Article]:
+    return execute_request(source, lambda: sources[source].fetch(count))
 
 
 @app.get("/search", description="Query articles by list of keywords or author name")
