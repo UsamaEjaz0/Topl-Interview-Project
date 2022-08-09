@@ -1,12 +1,14 @@
 from fastapi import FastAPI
 
+from api.cache.base import CachedNewsSource
 from api.models.article import Article
 from api.sources.base import NewsSource
 from api.sources.gnews import GNewsSource
 
+__gnews = CachedNewsSource(GNewsSource())
 sources: dict[str, NewsSource] = {
-    'default': GNewsSource(),
-    'gnews': GNewsSource(),
+    'default': __gnews,
+    'gnews': __gnews,
 }
 
 app = FastAPI()

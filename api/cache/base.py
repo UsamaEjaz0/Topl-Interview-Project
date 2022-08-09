@@ -2,9 +2,8 @@ from typing import TypeVar, Generic
 
 from api.cache.strategy.base import CacheStrategy
 from api.cache.strategy.memory import MemoryStrategy
-
-from api.models.author import Author
 from api.models.article import Article
+from api.models.author import Author
 from api.sources.base import NewsSource
 
 _T = TypeVar('_T', bound=NewsSource)
@@ -31,7 +30,10 @@ class CachedNewsSource(NewsSource, Generic[_T]):
         return self.__strategy[key]
 
     def search(self, item: Author | list[str]) -> list[Article]:
-        key = CacheStrategy.CachedSearch(item)
+        key = CacheStrategy.CachedSearch(item) \
+            if isinstance(item, Author) \
+            else CacheStrategy.CachedSearch(tuple(item))
+
         if key not in self.__strategy:
             self.__strategy[key] = self.__internal.search(item)
 

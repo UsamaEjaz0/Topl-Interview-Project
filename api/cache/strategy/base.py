@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Optional
 
-from api.models.author import Author
 from api.models.article import Article
+from api.models.author import Author
 
 
 class CacheStrategy(ABC):
@@ -14,7 +14,7 @@ class CacheStrategy(ABC):
 
     @dataclass(frozen=True, eq=True)
     class CachedSearch:
-        item: Author | list[str]
+        item: Author | tuple[str]
 
     def __setitem__(self, key: CachedFetch | CachedSearch, value: list[Article]) -> None:
         self._set(key, value)

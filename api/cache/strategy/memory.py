@@ -11,4 +11,4 @@ class MemoryStrategy(CacheStrategy):
         self.__cache[data] = result
 
     def _get(self, data: CacheStrategy.CachedFetch | CacheStrategy.CachedSearch) -> Optional[list[Article]]:
-        return self.__cache[data]
+        return self.__cache.get(data, None)

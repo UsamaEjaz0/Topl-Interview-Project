@@ -4,8 +4,8 @@ import requests
 from pydantic import BaseModel
 from requests import Response
 
-from api.models.author import Author
 from api.models.article import Article
+from api.models.author import Author
 from api.sources.base import NewsSource
 
 
@@ -57,7 +57,8 @@ class GNewsSource(NewsSource):
         if isinstance(item, Author):
             raise NotImplementedError("Search by author is not supported by this source")
 
-        articles = GNewSourceArticles.parse_obj(self.__get("search", q=" ".join(item)).json())
+        tokens = [f'"{token}"' for token in item]
+        articles = GNewSourceArticles.parse_obj(self.__get("search", q=" ".join(tokens)).json())
         return [
             article.map_to_article() for article in articles.articles
         ]
