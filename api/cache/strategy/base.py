@@ -7,6 +7,9 @@ from api.models.author import Author
 
 
 class CacheStrategy(ABC):
+    """
+    Abstract Cache Strategy class
+    """
     @dataclass(frozen=True, eq=True)
     class CachedFetch:
         count: int
@@ -26,7 +29,20 @@ class CacheStrategy(ABC):
         return self._get(item) is not None
 
     @abstractmethod
-    def _set(self, data: CachedFetch | CachedSearch, result: list[Article]) -> None: ...
+    def _set(self, data: CachedFetch | CachedSearch, result: list[Article]) -> None:
+        """
+        Stores the results in the cache dictionary
+        :param data: key of the dictionary
+        :param result: list of the articles to be stored in the cache
+        :return: None
+        """
+        ...
 
     @abstractmethod
-    def _get(self, data: CachedFetch | CachedSearch) -> Optional[list[Article]]: ...
+    def _get(self, data: CachedFetch | CachedSearch) -> Optional[list[Article]]:
+        """
+        Gets the list of articles given a key
+        :param data: key from which articles are to be found
+        :return: optional list of articles
+        """
+        ...

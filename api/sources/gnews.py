@@ -41,7 +41,7 @@ class GNewSourceArticles(BaseModel):
 
 class GNewsSource(NewsSource):
     # Move to more secure location like .env
-    __token: str = "fb59814ed56f1a263277c40b0a1ea6a8"
+    __token: str = "b2afdfba15da9f459a32cbee57cca1da"
 
     def __get(self, endpoint: str, **kwargs) -> Try[Response]:
         try:
@@ -66,7 +66,7 @@ class GNewsSource(NewsSource):
 
     @effect.try_[Seq[Article]]()
     def fetch(self, count: int = 10, offset: int = 0) -> Try[Seq[Article]]:
-        res: Response = yield from self.__get("top-headlines")
+        res: Response = yield from self.__get("top-headlines", max=count)
         articles: GNewSourceArticles = yield from self.__parse(res.json())
         return pipe(
             articles.articles,
@@ -83,11 +83,11 @@ class GNewsSource(NewsSource):
             seq.map(lambda i: f'"{i}"'),
             seq.fold(lambda acc, i: f"{acc} {i}".strip(), "")
         )
-        print(tokens)
+
         res: Response = yield from self.__get("search", q=tokens)
-        articles: GNewSourceArticles = yield from self.__parse(res.json())
+        gnews_articles: GNewSourceArticles = yield from self.__parse(res.json())
         return pipe(
-            articles.articles,
+            gnews_articles.articles,
             seq.map(lambda x: x.map_to_article())
         )
 

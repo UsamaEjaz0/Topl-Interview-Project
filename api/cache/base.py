@@ -13,6 +13,9 @@ _T = TypeVar('_T', bound=NewsSource)
 
 
 class CachedNewsSource(NewsSource, Generic[_T]):
+    """
+    Cached New Source class
+    """
     __internal: _T
     __strategy: CacheStrategy
 

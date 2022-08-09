@@ -5,6 +5,9 @@ from api.models.article import Article
 
 
 class MemoryStrategy(CacheStrategy):
+    """
+    A memory caching strategy class
+    """
     __cache: dict[CacheStrategy.CachedFetch | CacheStrategy.CachedSearch, list[Article]] = {}
 
     def _set(self, data: CacheStrategy.CachedFetch | CacheStrategy.CachedSearch, result: list[Article]) -> None:
